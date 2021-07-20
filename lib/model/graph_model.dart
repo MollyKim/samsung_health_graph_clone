@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BarData {
   final double value;
@@ -48,11 +49,17 @@ class GraphData{
 
 
 class Graph{
-  final bool isMonthly;
-  final int index;
+    bool isMonthly;
+    int index;
 
   Graph({
     this.isMonthly = true,
     this.index = 0,
 });
+
 }
+
+Graph initialGraph = Graph();
+final graphProvider = StateProvider<Graph>((ref)=>initialGraph);
+final monthlyOrWeeklyProvider = StateProvider<bool>((ref)=>initialGraph.isMonthly);
+final pointedIndex = StateProvider<int>((ref)=>initialGraph.index);

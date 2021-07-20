@@ -16,13 +16,13 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: GraphPage(),
+      home: GraphPage(data: fetchTimelog(context, true)),
     );
   }
 }
 
 
-List<dynamic> fetchTimelog(BuildContext context, bool isActivity ) {
+List<List<GraphData>> fetchTimelog(BuildContext context, bool isActivity ) {
   DateTime now = DateTime.now();
   List<GraphData> graphDataWeek = [];
   List<GraphData> graphDataMonth = [];
