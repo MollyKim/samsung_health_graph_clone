@@ -12,6 +12,7 @@ class GraphViewModel extends StateNotifier<Graph>{
 
   void isChange( ){
     state.isMonthly = !state.isMonthly;
+    state = state;
     //ref.read(monthlyOrWeeklyProvider).state = !ref.read(monthlyOrWeeklyProvider).state;
   }
 }

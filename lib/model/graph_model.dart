@@ -51,10 +51,12 @@ class GraphData{
 class Graph{
     bool isMonthly;
     int index;
+    double graphHeight;
 
   Graph({
     this.isMonthly = true,
     this.index = 0,
+    this.graphHeight = 250,
 });
 
 }
