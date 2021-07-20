@@ -22,15 +22,16 @@ class ChartData {
 
   final ScrollController scrollController;
 
-  ChartData(
-      this.selectedColor,
-      this.selectedTextStyle,
-      this.unselectedColor,
-      this.unselectedTextStyle,
-      this.chartWidth,
-      this.chartHeight,
-      this.barWidth,
-      this.scrollController);
+  ChartData({
+        this.selectedColor = Colors.indigo,
+      this.selectedTextStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+      this.unselectedColor = Colors.grey,
+      this.unselectedTextStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w300),
+      required this.chartWidth,
+      required this.chartHeight,
+      this.barWidth = 10,
+      required this.scrollController
+  });
 }
 
 class GraphData{
@@ -43,5 +44,15 @@ class GraphData{
     this.total = 0,
     this.date =  '',
   });
+}
 
+
+class Graph{
+  final bool isMonthly;
+  final int index;
+
+  Graph({
+    this.isMonthly = true,
+    this.index = 0,
+});
 }

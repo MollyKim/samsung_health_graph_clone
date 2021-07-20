@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:samsung_health_graph_clone/graphPage.dart';
 import 'package:samsung_health_graph_clone/model/graph_model.dart';
 import 'dart:math';
 
 void main() {
-  runApp(MyApp());
+  runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -43,7 +44,7 @@ List<dynamic> fetchTimelog(BuildContext context, bool isActivity ) {
     for(var i=10; i>0; i--){
       value = 100 + random.nextInt(40);
       thisWeek = thisWeek.subtract(Duration(days: 7));
-      String week = "${thisWeek.year}-${thisWeek.month}-${thisWeek.day}";
+      String week = "${thisWeek.month}/${thisWeek.day}";
       graphDataWeek.add(GraphData(date: week, total: value*7, count: 7));
     }
   } else {
@@ -59,7 +60,7 @@ List<dynamic> fetchTimelog(BuildContext context, bool isActivity ) {
     for(var i=10; i>0; i--){
       value = 8.3 + random.nextInt(20)*0.01;
       thisWeek = thisWeek.subtract(Duration(days: 7));
-      String week = "${thisWeek.year}-${thisWeek.month}-${thisWeek.day}";
+      String week = "${thisWeek.month}/${thisWeek.day}";
       graphDataWeek.add(GraphData(date: week, total: value*7, count: 7));
     }
   }
