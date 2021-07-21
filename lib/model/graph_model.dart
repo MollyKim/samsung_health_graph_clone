@@ -21,7 +21,7 @@ class ChartData {
 
   final double barWidth;
 
-  final ScrollController scrollController;
+  final ScrollController? scrollController;
 
   ChartData({
         this.selectedColor = Colors.indigo,
@@ -31,7 +31,7 @@ class ChartData {
       required this.chartWidth,
       required this.chartHeight,
       this.barWidth = 10,
-      required this.scrollController
+      this.scrollController
   });
 }
 
@@ -52,20 +52,21 @@ class Graph{
     bool isMonthly;
     int index;
     double graphHeight;
+    ScrollController? scrollController;
 
   Graph({
     this.isMonthly = true,
     this.index = 0,
     this.graphHeight = 250,
+    this.scrollController
 });
 
 }
 
-ScrollController scrollController = ScrollController();
 ChartData chartData = ChartData(
     chartWidth: 150,
     chartHeight: 250,
-    scrollController: scrollController);
+    );
 
 Graph initialGraph = Graph();
 final graphProvider = StateProvider<Graph>((ref)=>initialGraph);

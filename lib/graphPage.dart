@@ -94,36 +94,37 @@ class DrawGraph extends ConsumerWidget {
               label: data[isMonthlyToInt][index].date,
               index: index)));
     double maxBarHeight = barData.reduce((a, b) => a.value<b.value ? b : a).value;
+    double minBarHeight = barData.reduce((a, b) => a.value<b.value ? a : b).value;
+
+    graph.scrollController = ScrollController(initialScrollOffset: barData.length * 60.0);
+
     return SizedBox(
       height: 250,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        controller: chartData.scrollController,
+        controller: graph.scrollController,
         key: UniqueKey(),
         child: Row(
           children: [
             SizedBox(width: blank),
-            SizedBox(
-              height: 250,
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: barData.length,
-                primary: false,
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (BuildContext context, int index){
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomPaint(
-                        painter: DrawStick(barData[index]),
-                        size: Size(60, maxBarHeight),
-                      ),
-                      SizedBox(height: 25),
-                     Text(barData[index].label!,style: TextStyle(fontSize: 20),),
-                    ],
-                  );
-                },
-              ),
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: barData.length,
+              primary: false,
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (BuildContext context, int index){
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomPaint(
+                      painter: DrawStick(barData[index],maxBarHeight,minBarHeight),
+                      size: Size(60, 200),
+                    ),
+                   SizedBox(height: 20,),
+                   Text(barData[index].label!,style: TextStyle(fontSize: 20),),
+                  ],
+                );
+              },
             ),
             SizedBox(width: blank),
           ],
@@ -136,7 +137,9 @@ class DrawGraph extends ConsumerWidget {
 
 class DrawStick extends CustomPainter{
   final BarData barData;
-  DrawStick(this.barData);
+  final double max;
+  final double min;
+  DrawStick(this.barData, this.max, this.min);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -144,9 +147,13 @@ class DrawStick extends CustomPainter{
       ..color = chartData.unselectedColor
       ..style = PaintingStyle.fill;
 
-    ///how to call provider in here
+    double ratio = 0.8;
+
+    if(barData.value != min)
+      ratio = (barData.value-min)/(max-min);
+
     //막대기의 크기는 10으로 고정
-    final rect = Rect.fromPoints(Offset(0,250), Offset(10,(250-barData.value)));
+    final rect = Rect.fromPoints(Offset(0,size.height), Offset(10,(size.height-ratio*180)));
 
     canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(30)), paint);
   }
