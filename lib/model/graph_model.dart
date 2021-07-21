@@ -61,6 +61,12 @@ class Graph{
 
 }
 
+ScrollController scrollController = ScrollController();
+ChartData chartData = ChartData(
+    chartWidth: 150,
+    chartHeight: 250,
+    scrollController: scrollController);
+
 Graph initialGraph = Graph();
 final graphProvider = StateProvider<Graph>((ref)=>initialGraph);
 final monthlyOrWeeklyProvider = StateProvider<bool>((ref)=>initialGraph.isMonthly);

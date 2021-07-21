@@ -20,7 +20,7 @@ class GraphPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             GraphHeader(),
-            DrawGraph(data),
+            DrawGraph(data: data),
             Container(color: Colors.pink[50],height: 300,),
             Container(color: Colors.blue[50],height: 300,),
             Container(color: Colors.pink[50],height: 300,),
@@ -38,7 +38,6 @@ class GraphHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     var graphProvider = ref.read(graphDataProvider.notifier);
     Graph graph = ref.watch(graphDataProvider);
-
     return Padding(
       padding: const EdgeInsets.only(left: 15,top: 30),
       child: GestureDetector(
@@ -83,44 +82,52 @@ class DrawGraph extends ConsumerWidget {
 
   Widget build(BuildContext context, WidgetRef ref) {
     double blank = MediaQuery. of(context). size. width / 2;
-    var graphProvider = ref.read(graphDataProvider.notifier);
     Graph graph = ref.watch(graphDataProvider);
 
-    List<GraphData> graphData = graph.isMonthly ? data[1] : data[0];
-    ScrollController scrollController = ScrollController();
+    int isMonthlyToInt = graph.isMonthly ? 1 : 0;
 
-    ChartData chartData = ChartData(
-        chartWidth: 150,
-        chartHeight: graph.graphHeight,
-        scrollController: scrollController);
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      controller: chartData.scrollController,
-      key: UniqueKey(),
-      child: Row(
-        children: [
-          SizedBox(width: blank),
-          ListView.builder(
-            shrinkWrap: true,
-            itemCount: graphData.length,
-            primary: false,
-            itemBuilder: (BuildContext context, int index){
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CustomPaint(
-                    painter: DrawStick(index, ),
-                    size: Size(60, data.max),
-                  ),
-                  SizedBox(height: 25),
-                  Text(),
-                ],
-              );
-            },
-          ),
-          SizedBox(width: blank),
-        ],
+    List<BarData> barData = [];
+      List.generate(data[isMonthlyToInt].length, (index)
+      => barData.add(
+          BarData(
+              value: (data[isMonthlyToInt][index].total~/data[isMonthlyToInt][index].count).toDouble(),
+              label: data[isMonthlyToInt][index].date,
+              index: index)));
+    double maxBarHeight = barData.reduce((a, b) => a.value<b.value ? b : a).value;
+    return SizedBox(
+      height: 250,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        controller: chartData.scrollController,
+        key: UniqueKey(),
+        child: Row(
+          children: [
+            SizedBox(width: blank),
+            SizedBox(
+              height: 250,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: barData.length,
+                primary: false,
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (BuildContext context, int index){
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomPaint(
+                        painter: DrawStick(barData[index]),
+                        size: Size(60, maxBarHeight),
+                      ),
+                      SizedBox(height: 25),
+                     Text(barData[index].label!,style: TextStyle(fontSize: 20),),
+                    ],
+                  );
+                },
+              ),
+            ),
+            SizedBox(width: blank),
+          ],
+        ),
       ),
     );
   }
@@ -128,16 +135,8 @@ class DrawGraph extends ConsumerWidget {
 
 
 class DrawStick extends CustomPainter{
-  final int index;
-  final double value;
-
-  DrawStick(this.index,this.value);
-
-  ChartData chartData = ChartData(
-      chartWidth: 150,
-      chartHeight: 250,
-      scrollController: scrollController);
-
+  final BarData barData;
+  DrawStick(this.barData);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -147,7 +146,7 @@ class DrawStick extends CustomPainter{
 
     ///how to call provider in here
     //막대기의 크기는 10으로 고정
-    final rect = Rect.fromPoints(Offset(0,250), Offset(10,(250-value)));
+    final rect = Rect.fromPoints(Offset(0,250), Offset(10,(250-barData.value)));
 
     canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(30)), paint);
   }
