@@ -15,4 +15,9 @@ class GraphViewModel extends StateNotifier<Graph>{
     state = state;
     //ref.read(monthlyOrWeeklyProvider).state = !ref.read(monthlyOrWeeklyProvider).state;
   }
+
+  void indexChange(int index){
+    state.index = index;
+    state = state;
+  }
 }

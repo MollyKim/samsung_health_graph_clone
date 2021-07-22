@@ -9,6 +9,10 @@ class GraphPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+
+
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -80,9 +84,13 @@ class DrawGraph extends ConsumerWidget {
   const DrawGraph({Key? key,required this.data}) : super(key: key);
 
 
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {print('body build');
     double blank = MediaQuery. of(context). size. width / 2;
     Graph graph = ref.watch(graphDataProvider);
+    var graphProvider = ref.read(graphDataProvider.notifier);
+    int test = ref.watch(graphDataProvider.notifier).state.index;
+
+
 
     int isMonthlyToInt = graph.isMonthly ? 1 : 0;
 
@@ -95,39 +103,78 @@ class DrawGraph extends ConsumerWidget {
               index: index)));
     double maxBarHeight = barData.reduce((a, b) => a.value<b.value ? b : a).value;
     double minBarHeight = barData.reduce((a, b) => a.value<b.value ? a : b).value;
-
     graph.scrollController = ScrollController(initialScrollOffset: barData.length * 60.0);
 
-    return SizedBox(
-      height: 250,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        controller: graph.scrollController,
-        key: UniqueKey(),
-        child: Row(
-          children: [
-            SizedBox(width: blank),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: barData.length,
-              primary: false,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (BuildContext context, int index){
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CustomPaint(
-                      painter: DrawStick(barData[index],maxBarHeight,minBarHeight),
-                      size: Size(60, 200),
-                    ),
-                   SizedBox(height: 20,),
-                   Text(barData[index].label!,style: TextStyle(fontSize: 20),),
-                  ],
-                );
-              },
-            ),
-            SizedBox(width: blank),
-          ],
+    graph.index = barData.length-1;
+    int barIndex = barData.length-1;
+    bool indexChange = ref.watch(graphDataProvider.select((value) => value.index == barIndex));
+
+    bool isScrolling = false;
+    bool lock = false;
+
+    return NotificationListener(
+      onNotification: (notification){
+        // if(!lock) {
+        //   if (notification is ScrollStartNotification) {
+        //     isScrolling = true;
+        //   }
+        //   if (isScrolling) {
+        //     if (notification is ScrollEndNotification) {
+        //       isScrolling = false;
+        //       int indexValue = graph.scrollController!.offset ~/ 60;
+        //       //print('graph.scrollController!.offset : ${graph.scrollController!.offset}');
+        //       graphProvider.indexChange(indexValue);
+        //       graph.scrollController!.jumpTo(graph.scrollController!.offset);
+        //     }
+        //   }
+        // }
+        return true;
+      },
+      child: SizedBox(
+        height: 250,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          controller: graph.scrollController,
+          key: UniqueKey(),
+          child: Row(
+            children: [
+              SizedBox(width: blank),
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: barData.length,
+                primary: false,
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (BuildContext context, int index){
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                       GestureDetector(
+                         onTap:(){
+                          lock = true;
+                          graphProvider.indexChange(index);
+                          graph.scrollController!.jumpTo(index * 60.0);
+                         },
+                         onTapUp: (up){
+                           lock = false;
+                         },
+                         child: CustomPaint(
+                          painter: DrawStick(
+                              barData[index],
+                              maxBarHeight,
+                              minBarHeight,
+                              test),
+                          size: Size(60, 200),
+                      ),
+                       ),
+                     SizedBox(height: 20,),
+                     Text(barData[index].label!,style: (index == test) ? chartData.selectedTextStyle : chartData.unselectedTextStyle,),
+                    ],
+                  );
+                },
+              ),
+              SizedBox(width: blank),
+            ],
+          ),
         ),
       ),
     );
@@ -139,12 +186,13 @@ class DrawStick extends CustomPainter{
   final BarData barData;
   final double max;
   final double min;
-  DrawStick(this.barData, this.max, this.min);
+  final int selectedIndex;
+  DrawStick(this.barData, this.max, this.min, this.selectedIndex);
 
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint()
-      ..color = chartData.unselectedColor
+      ..color = barData.index == selectedIndex ? chartData.selectedColor : chartData.unselectedColor
       ..style = PaintingStyle.fill;
 
     double ratio = 0.8;
@@ -160,8 +208,8 @@ class DrawStick extends CustomPainter{
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    // TODO: implement shouldRepaint
-    throw UnimplementedError();
+print('2');
+    return oldDelegate.shouldRepaint(oldDelegate);
   }
 
 }

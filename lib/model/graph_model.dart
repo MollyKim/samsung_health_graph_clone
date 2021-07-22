@@ -24,10 +24,10 @@ class ChartData {
   final ScrollController? scrollController;
 
   ChartData({
-        this.selectedColor = Colors.indigo,
-      this.selectedTextStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+        this.selectedColor = Colors.lime,
+      this.selectedTextStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w400,color: Colors.lime),
       this.unselectedColor = Colors.grey,
-      this.unselectedTextStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w300),
+      this.unselectedTextStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w300,color: Colors.black),
       required this.chartWidth,
       required this.chartHeight,
       this.barWidth = 10,
@@ -69,6 +69,7 @@ ChartData chartData = ChartData(
     );
 
 Graph initialGraph = Graph();
+
 final graphProvider = StateProvider<Graph>((ref)=>initialGraph);
 final monthlyOrWeeklyProvider = StateProvider<bool>((ref)=>initialGraph.isMonthly);
 final pointedIndex = StateProvider<int>((ref)=>initialGraph.index);

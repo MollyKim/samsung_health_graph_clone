@@ -33,11 +33,11 @@ List<List<GraphData>> fetchTimelog(BuildContext context, bool isActivity ) {
 
   if(isActivity){
     for (var i=3; i>0; i--){
-      value = 10+ random.nextInt(40);
+      value = 8.3 + random.nextInt(20)*0.01;
       String month = (now.month-i).toString();
       graphDataMonth.add(GraphData(date: month,total: value*28,count: 25+i));
     }
-    graphDataMonth.add(GraphData(date: now.month.toString(), total: 10*15, count: 15));
+    graphDataMonth.add(GraphData(date: now.month.toString(), total: 8.3*15, count: 15));
 
     String week = "${thisWeek.month}/${thisWeek.day}";
     graphDataWeek.add(GraphData(date: week, total: 100*4, count: 4));
