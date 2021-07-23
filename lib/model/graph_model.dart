@@ -50,16 +50,14 @@ class GraphData{
 
 class Graph{
     bool isMonthly;
-    int index;
     double graphHeight;
     ScrollController? scrollController;
 
   Graph({
     this.isMonthly = true,
-    this.index = 0,
     this.graphHeight = 250,
     this.scrollController
-});
+  });
 
 }
 
@@ -72,4 +70,7 @@ Graph initialGraph = Graph();
 
 final graphProvider = StateProvider<Graph>((ref)=>initialGraph);
 final monthlyOrWeeklyProvider = StateProvider<bool>((ref)=>initialGraph.isMonthly);
-final pointedIndex = StateProvider<int>((ref)=>initialGraph.index);
+final pointedIndexProvider = StateProvider<int>((ref)=>0);
+
+
+bool lock = false;
