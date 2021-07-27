@@ -16,22 +16,14 @@ class ChartData {
   final Color unselectedColor;
   final TextStyle unselectedTextStyle;
 
-  final double chartWidth;
-  final double chartHeight;
-
-  final double barWidth;
-
-  final ScrollController? scrollController;
+  final double strokeWidth;
 
   ChartData({
         this.selectedColor = Colors.lime,
       this.selectedTextStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w400,color: Colors.lime),
       this.unselectedColor = Colors.grey,
       this.unselectedTextStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w300,color: Colors.black),
-      required this.chartWidth,
-      required this.chartHeight,
-      this.barWidth = 10,
-      this.scrollController
+      this.strokeWidth = 10,
   });
 }
 
@@ -61,16 +53,15 @@ class Graph{
 
 }
 
-ChartData chartData = ChartData(
-    chartWidth: 150,
-    chartHeight: 250,
-    );
+ChartData chartData = ChartData();
 
-Graph initialGraph = Graph();
+bool scrollLock = false;
+bool isScrolling = false;
 
-final graphProvider = StateProvider<Graph>((ref)=>initialGraph);
-final monthlyOrWeeklyProvider = StateProvider<bool>((ref)=>initialGraph.isMonthly);
-final pointedIndexProvider = StateProvider<int>((ref)=>0);
-
-
-bool lock = false;
+final pointIndexProvider = StateProvider<int>((ref) {
+  return 0;
+});
+final isMonthly = StateProvider<bool>((ref) => true);
+final scrollProvider = Provider<ScrollController>((ref) => throw UnimplementedError());
+final barDataListProvider = Provider<List<BarData>>((ref) => throw UnimplementedError());
+final barDataProvider = Provider<BarData>((ref) => throw UnimplementedError());

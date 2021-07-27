@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:samsung_health_graph_clone/model/graph_model.dart';
-import 'package:samsung_health_graph_clone/view_model/graph_view_model.dart';
-
 
 class GraphPage extends ConsumerWidget {
   final List<List<GraphData>> data;
@@ -10,8 +8,7 @@ class GraphPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Graph graph = ref.watch(graphDataProvider);
-    int isMonthlyToInt = graph.isMonthly ? 1 : 0;
+    int isMonthlyToInt = ref.watch(isMonthly).state ? 1: 0;
 
     List<BarData> barData = [];
     List.generate(data[isMonthlyToInt].length, (index)
@@ -20,66 +17,66 @@ class GraphPage extends ConsumerWidget {
             value: (data[isMonthlyToInt][index].total~/data[isMonthlyToInt][index].count).toDouble(),
             label: data[isMonthlyToInt][index].date,
             index: index)));
-
+  ScrollController scrollController = ScrollController(initialScrollOffset: (barData.length -1)*60);
 
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Colors.purple[100],
-        title: Text("samsung health graph clone"),),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            GraphHeader(),
-            DrawGraph(data: barData),
-            Content(data: barData),
-            Container(color: Colors.pink[50],height: 300,),
-            Container(color: Colors.blue[50],height: 300,),
-            Container(color: Colors.pink[50],height: 300,),
-          ],
+      body: ProviderScope(
+        overrides: [
+          scrollProvider.overrideWithValue(scrollController),
+          barDataListProvider.overrideWithValue(barData),
+        ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GraphHeader(),
+              DrawGraph(),
+              Center(child: Text('---')),
+              Content(data: barData),
+              Container(color: Colors.pink[50],height: 300,),
+              Container(color: Colors.blue[50],height: 300,),
+              Container(color: Colors.pink[50],height: 300,),
+            ],
+          ),
+
         ),
       ),
     );
   }
 }
 
-
 class GraphHeader extends ConsumerWidget {
-
   Widget build(BuildContext context, WidgetRef ref) {
-  Graph graph = ref.watch(graphDataProvider);
-  var graphProvider = ref.read(graphDataProvider.notifier);
-
-  return Padding(
+    bool isMonth = ref.watch(isMonthly.notifier).state;
+    return Padding(
       padding: const EdgeInsets.only(left: 15,top: 30),
       child: GestureDetector(
         onTap: () {
-          graphProvider.isChange();
+        ref.watch(isMonthly).state = !isMonth;
         },
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-                decoration: BoxDecoration(
-                  color: graph.isMonthly ? Colors.grey : Colors.purple[200],
-                  borderRadius: BorderRadius.circular(5.0),
-                ),
-                child:Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text("주별",style: TextStyle(fontSize: 20,color: Colors.white)),
-                ),
+              decoration: BoxDecoration(
+                color: isMonth ? Colors.grey : Colors.purple[200],
+                borderRadius: BorderRadius.circular(5.0),
+              ),
+              child:Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text("주별",style: TextStyle(fontSize: 20,color: Colors.white)),
+              ),
             ),
             Container(
-                decoration: BoxDecoration(
-                  color: graph.isMonthly ? Colors.purple[200] : Colors.grey ,
-                  borderRadius: BorderRadius.circular(5.0),
-                ),
-                child:Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text("월별",style: TextStyle(fontSize: 20,color: Colors.white)),
-                ),
+              decoration: BoxDecoration(
+                color: isMonth ? Colors.purple[200] : Colors.grey ,
+                borderRadius: BorderRadius.circular(5.0),
+              ),
+              child:Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text("월별",style: TextStyle(fontSize: 20,color: Colors.white)),
+              ),
             ),
           ],
         ),
@@ -88,124 +85,64 @@ class GraphHeader extends ConsumerWidget {
   }
 }
 
-
-class DrawGraph extends ConsumerStatefulWidget {
-  final List<BarData> data;
-  const DrawGraph({Key? key, required this.data}) : super(key: key);
-
-  @override
-  ConsumerState<DrawGraph> createState() {
-    return _GraphScreenState();
-  }
-}
-
-class _GraphScreenState extends ConsumerState<DrawGraph> {
-
-  @override
-  void initState() {
-      ref.read(pointedIndexProvider.notifier).state = widget.data.length -1;
-    ref.read(graphDataProvider).scrollController = ScrollController(initialScrollOffset: widget.data.length * 60.0);
-    super.initState();
-  }
-  @override
-  void didUpdateWidget(covariant DrawGraph oldWidget) {
-    Future.delayed(Duration.zero, () {
-      ref.watch(pointedIndexProvider).state = widget.data.length -1;
-      ref.read(graphDataProvider).scrollController!.jumpTo(widget.data.length * 60);
-    });
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-        Graph graph = ref.watch(graphDataProvider);
-    StateController<int> pointedIndex = ref.watch(pointedIndexProvider);
-    bool isScrolling = false;
-
-        return NotificationListener(
-      onNotification: (notification){
-        if(!lock) {
-          if (notification is ScrollStartNotification) {
-            isScrolling = true;
-          }
-          if (isScrolling) {
-            if (notification is ScrollEndNotification) {
-              isScrolling = false;
-              int indexValue = graph.scrollController!.offset ~/ 60;
-                pointedIndex.state = indexValue-1;
-              graph.scrollController!.jumpTo(indexValue*60.0);
-            }
-          }
-          if(notification is ScrollUpdateNotification){
-            int indexValue = graph.scrollController!.offset ~/ 60;
-            pointedIndex.state = indexValue-1;
-            if(pointedIndex.state<0)
-              pointedIndex.state = 0;
-          }
-        }
-        return true;
-      },
-      child: DrawBars(data: widget.data),
-    );
-
-  }
-}
-
-
-class DrawBars extends ConsumerWidget{
-  final List<BarData> data;
-  DrawBars({required this.data});
-
+class DrawGraph extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Graph graph = ref.watch(graphDataProvider);
+    return NotificationListener(
+      onNotification: (notification){
+          if (notification is ScrollStartNotification) {
+            isScrolling = true;
+          } else if(notification is ScrollUpdateNotification){
+            int nearestBarIndex =
+            _nearestBar(notification.metrics.extentBefore);
+            if (ref.read(pointIndexProvider).state != nearestBarIndex) {
+              ref.read(pointIndexProvider).state = nearestBarIndex;
+            }
+          } else if(notification is ScrollEndNotification){
+            if (!scrollLock) {
+              scrollLock = true;
+              int nearestBarIndex = _nearestBar(notification.metrics.extentBefore);
+              ref.read(pointIndexProvider).state = nearestBarIndex;
+              ref.watch(scrollProvider).jumpTo(
+                  nearestBarIndex * 60);
+              scrollLock = false;
+            }
+            isScrolling = false;
+          }
+        return true;
+      },
+      child: DrawBars(),
+    );
+  }
+  int _nearestBar(double now) {
+    double index = now / 60;
+    int left = index.round();
+    return left;
+  }
+}
 
-    StateController<int> pointedIndex = ref.watch(pointedIndexProvider);
+class DrawBars extends ConsumerWidget{
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     double blank = MediaQuery. of(context). size. width / 2;
-    double maxBarHeight = data.reduce((a, b) => a.value<b.value ? b : a).value;
-    double minBarHeight = data.reduce((a, b) => a.value<b.value ? a : b).value;
-
     return SizedBox(
       height: 250,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        controller: graph.scrollController,
+        controller: ref.watch(scrollProvider),
         child: Row(
           children: [
             SizedBox(width: blank),
             ListView.builder(
-              shrinkWrap: true,
-              itemCount: data.length,
               primary: false,
               scrollDirection: Axis.horizontal,
-              itemBuilder: (BuildContext context, int index){
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTapDown:(down){
-                        lock = true;
-                        pointedIndex.state = index;
-                        graph.scrollController!.jumpTo(index * 60.0);
-                      },
-                      onTapCancel:(){
-                        lock = false;
-                      },
-                      onTapUp: (up){
-                        lock = false;
-                      },
-                      child: DrawBarNLabel(
-                        data: data[index],
-                        index: index,
-                        minBarHeight: minBarHeight,
-                        maxBarHeight: maxBarHeight,
-                      ),
-                    ),
-                    SizedBox(height: 20,),
-                    Text(data[index].label!,style: (index == pointedIndex.state) ? chartData.selectedTextStyle : chartData.unselectedTextStyle,),
-                  ],
-                );
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                return ProviderScope(overrides: [
+                  barDataProvider.overrideWithValue(ref.watch(barDataListProvider)[index])
+                ], child: const BarItem());
               },
+              itemCount: ref.read(barDataListProvider).length,
             ),
             SizedBox(width: blank),
           ],
@@ -215,42 +152,71 @@ class DrawBars extends ConsumerWidget{
   }
 }
 
-class DrawBarNLabel extends ConsumerWidget{
-  final BarData data;
-  final int index;
-  final double minBarHeight;
-  final double maxBarHeight;
-
-  DrawBarNLabel({required this.data,required this.index, required this.maxBarHeight, required this.minBarHeight});
+class BarItem extends ConsumerWidget {
+  const BarItem();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    int pointedIndex = ref.read(pointedIndexProvider.notifier).state;
-    ref.watch(pointedIndexProvider.select((value) => value.state == index));
+    BarData barData = ref.watch(barDataProvider);
+
+    double maxBarHeight = ref.read(barDataListProvider).reduce((a, b) => a.value<b.value ? b : a).value;
+    double minBarHeight = ref.read(barDataListProvider).reduce((a, b) => a.value<b.value ? a : b).value;
+
+    return GestureDetector(
+      onTapUp: (_) {
+        if (!isScrolling) {
+          ref.watch(scrollProvider)
+              .jumpTo(barData.index * 60);
+          ref.read(pointIndexProvider).state = barData.index;
+        }
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          DrawBar(maxBarHeight: maxBarHeight, minBarHeight: minBarHeight,),
+          SizedBox(height: 20,),
+          BarText()
+        ],
+      ),
+    );
+  }
+}
+
+class DrawBar extends ConsumerWidget{
+  final double minBarHeight;
+  final double maxBarHeight;
+  const DrawBar({required this.maxBarHeight, required this.minBarHeight});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    BarData barData = ref.watch(barDataProvider);
+    bool isPointed = ref.watch(pointIndexProvider.select((value) => value.state == barData.index));
 
     return CustomPaint(
-      painter: DrawStick(
-          data,
+      painter: BarPainter(
+          barData,
           maxBarHeight,
           minBarHeight,
-          pointedIndex),
+          isPointed),
       size: Size(60, 200),
     );
   }
 }
 
-class DrawStick extends CustomPainter{
+class BarPainter extends CustomPainter{
   final BarData barData;
   final double max;
   final double min;
-  final int selectedIndex;
-  DrawStick(this.barData, this.max, this.min, this.selectedIndex);
+  final bool isPointed;
+  const BarPainter(this.barData, this.max, this.min, this.isPointed);
 
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint()
-      ..color = barData.index == selectedIndex ? chartData.selectedColor : chartData.unselectedColor
-      ..style = PaintingStyle.fill
+      ..color = isPointed ? chartData.selectedColor : chartData.unselectedColor
+      ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 10.0;
 
@@ -261,11 +227,28 @@ class DrawStick extends CustomPainter{
 
     canvas.drawLine(Offset(0,size.height), Offset(0,(size.height-ratio*180)), paint);
   }
-
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-
 }
+
+class BarText extends ConsumerWidget {
+  const BarText();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    BarData barData = ref.watch(barDataProvider);
+    bool isPointed = ref.watch(pointIndexProvider.select((value) {
+      return value.state == barData.index;
+    }));
+
+    return Center(
+      child: Text(
+        barData.label ?? '', textAlign: TextAlign.center, style: isPointed ? chartData.selectedTextStyle : chartData.unselectedTextStyle,
+      ),
+    );
+  }
+}
+
 
 class Content extends ConsumerWidget {
   final List<BarData> data;
@@ -274,10 +257,16 @@ class Content extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    var index = ref.watch(pointedIndexProvider);
+    var index = ref.watch(pointIndexProvider);
     return Container(
       height: 300,
       color: index.state % 2 == 1? Colors.blue[200] : Colors.red[200],
     );
   }
 }
+
+
+
+
+
+
