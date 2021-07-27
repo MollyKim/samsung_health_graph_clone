@@ -21,9 +21,11 @@ class GraphPage extends ConsumerWidget {
 
     return Scaffold(
       body: ProviderScope(
+        key: UniqueKey(),
         overrides: [
           scrollProvider.overrideWithValue(scrollController),
           barDataListProvider.overrideWithValue(barData),
+          //pointIndexProvider.overrideWithValue(barData.length -1)
         ],
         child: SingleChildScrollView(
           child: Column(
@@ -166,13 +168,13 @@ class BarItem extends ConsumerWidget {
       onTapUp: (_) {
         if (!isScrolling) {
           ref.watch(scrollProvider)
-              .jumpTo(barData.index * 60);
+              .animateTo(barData.index * 60, duration: Duration(milliseconds: 300),curve : Curves.fastOutSlowIn);
           ref.read(pointIndexProvider).state = barData.index;
         }
       },
       child: Column(
         mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           DrawBar(maxBarHeight: maxBarHeight, minBarHeight: minBarHeight,),
@@ -225,7 +227,7 @@ class BarPainter extends CustomPainter{
     if(barData.value != min)
       ratio = (barData.value-min)/(max-min);
 
-    canvas.drawLine(Offset(0,size.height), Offset(0,(size.height-ratio*180)), paint);
+    canvas.drawLine(Offset(30,size.height), Offset(30,(size.height-ratio*180)), paint);
   }
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
