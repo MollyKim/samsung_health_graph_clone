@@ -2,6 +2,68 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:samsung_health_graph_clone/model/graph_model.dart';
 
+// class GraphScreen extends ConsumerStatefulWidget {
+//   final List<List<GraphData>> data;
+//   const GraphScreen({Key? key, required this.data}) : super(key: key);
+//
+//   @override
+//   _GraphScreenState createState() => _GraphScreenState();
+// }
+//
+// class _GraphScreenState extends ConsumerState<GraphScreen> {
+//   @override
+//   void initState() {
+//     ref.read(pointIndexProvider).state = widget.data.length -1;
+//     super.initState();
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     int isMonthlyToInt = ref
+//         .watch(isMonthly)
+//         .state ? 1 : 0;
+//
+//     List<BarData> barData = [];
+//     List.generate(widget.data[isMonthlyToInt].length, (index) =>
+//         barData.add(
+//             BarData(
+//                 value: (widget.data[isMonthlyToInt][index].total ~/
+//                     widget.data[isMonthlyToInt][index].count).toDouble(),
+//                 label: widget.data[isMonthlyToInt][index].date,
+//                 index: index)));
+//     ScrollController scrollController = ScrollController(
+//         initialScrollOffset: (barData.length - 1) * 60);
+//
+//     return Scaffold(
+//       body: ProviderScope(
+//         key: UniqueKey(),
+//         overrides: [
+//           scrollProvider.overrideWithValue(scrollController),
+//           barDataListProvider.overrideWithValue(barData),
+//           //pointIndexProvider.overrideWithValue(barData.length -1)
+//         ],
+//         child: SingleChildScrollView(
+//           child: Column(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               GraphHeader(),
+//               DrawGraph(),
+//               Center(child: Text('---')),
+//               Content(data: barData),
+//               Container(color: Colors.pink[50], height: 300,),
+//               Container(color: Colors.blue[50], height: 300,),
+//               Container(color: Colors.pink[50], height: 300,),
+//             ],
+//           ),
+//
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
 class GraphPage extends ConsumerWidget {
   final List<List<GraphData>> data;
   const GraphPage({Key? key, required this.data}) : super(key: key);
@@ -17,15 +79,17 @@ class GraphPage extends ConsumerWidget {
             value: (data[isMonthlyToInt][index].total~/data[isMonthlyToInt][index].count).toDouble(),
             label: data[isMonthlyToInt][index].date,
             index: index)));
-  ScrollController scrollController = ScrollController(initialScrollOffset: (barData.length -1)*60);
 
-    return Scaffold(
+  ScrollController scrollController = ScrollController(initialScrollOffset: (barData.length)*60);
+  StateController<int> initialIndex= StateController<int>(barData.length-1);
+
+  return Scaffold(
       body: ProviderScope(
         key: UniqueKey(),
         overrides: [
           scrollProvider.overrideWithValue(scrollController),
           barDataListProvider.overrideWithValue(barData),
-          //pointIndexProvider.overrideWithValue(barData.length -1)
+          pointIndexProvider.overrideWithValue(initialIndex)
         ],
         child: SingleChildScrollView(
           child: Column(

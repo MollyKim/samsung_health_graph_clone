@@ -61,6 +61,7 @@ bool isScrolling = false;
 final pointIndexProvider = StateProvider<int>((ref) {
   return 0;
 });
+
 final isMonthly = StateProvider<bool>((ref) => true);
 final scrollProvider = Provider<ScrollController>((ref) => throw UnimplementedError());
 final barDataListProvider = Provider<List<BarData>>((ref) => throw UnimplementedError());
