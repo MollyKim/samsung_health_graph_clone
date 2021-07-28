@@ -80,7 +80,7 @@ class GraphPage extends ConsumerWidget {
             label: data[isMonthlyToInt][index].date,
             index: index)));
 
-  ScrollController scrollController = ScrollController(initialScrollOffset: (barData.length)*60);
+  ScrollController scrollController = ScrollController(initialScrollOffset: (barData.length-1)*60);
   StateController<int> initialIndex= StateController<int>(barData.length-1);
 
   return Scaffold(
@@ -159,8 +159,9 @@ class DrawGraph extends ConsumerWidget {
           if (notification is ScrollStartNotification) {
             isScrolling = true;
           } else if(notification is ScrollUpdateNotification){
-            int nearestBarIndex =
-            _nearestBar(notification.metrics.extentBefore);
+            int nearestBarIndex = _nearestBar(notification.metrics.extentBefore);
+            if(nearestBarIndex >= ref.read(barDataListProvider).length)
+              nearestBarIndex = ref.read(barDataListProvider).length -1;
             if (ref.read(pointIndexProvider).state != nearestBarIndex) {
               ref.read(pointIndexProvider).state = nearestBarIndex;
             }
@@ -168,9 +169,10 @@ class DrawGraph extends ConsumerWidget {
             if (!scrollLock) {
               scrollLock = true;
               int nearestBarIndex = _nearestBar(notification.metrics.extentBefore);
+              if(nearestBarIndex >= ref.read(barDataListProvider).length)
+                nearestBarIndex = ref.read(barDataListProvider).length -1;
               ref.read(pointIndexProvider).state = nearestBarIndex;
-              ref.watch(scrollProvider).jumpTo(
-                  nearestBarIndex * 60);
+              ref.watch(scrollProvider).jumpTo(nearestBarIndex * 60);
               scrollLock = false;
             }
             isScrolling = false;
