@@ -18,12 +18,15 @@ class ChartData {
 
   final double strokeWidth;
 
+  final double barSpace;
+
   ChartData({
         this.selectedColor = Colors.lime,
       this.selectedTextStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w400,color: Colors.lime),
       this.unselectedColor = Colors.grey,
       this.unselectedTextStyle = const TextStyle(fontSize: 14, fontWeight: FontWeight.w300,color: Colors.black),
       this.strokeWidth = 10,
+    this.barSpace = 60.0,
   });
 }
 
@@ -57,6 +60,7 @@ ChartData chartData = ChartData();
 
 bool scrollLock = false;
 bool isScrolling = false;
+bool touchLock = false;
 
 final pointIndexProvider = StateProvider<int>((ref) {
   return 0;

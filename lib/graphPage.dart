@@ -80,7 +80,7 @@ class GraphPage extends ConsumerWidget {
             label: data[isMonthlyToInt][index].date,
             index: index)));
 
-  ScrollController scrollController = ScrollController(initialScrollOffset: (barData.length-1)*60);
+  ScrollController scrollController = ScrollController(initialScrollOffset: (barData.length-1)*chartData.barSpace);
   StateController<int> initialIndex= StateController<int>(barData.length-1);
 
   return Scaffold(
@@ -159,20 +159,22 @@ class DrawGraph extends ConsumerWidget {
           if (notification is ScrollStartNotification) {
             isScrolling = true;
           } else if(notification is ScrollUpdateNotification){
+            if(!touchLock) {
             int nearestBarIndex = _nearestBar(notification.metrics.extentBefore);
-            if(nearestBarIndex >= ref.read(barDataListProvider).length)
-              nearestBarIndex = ref.read(barDataListProvider).length -1;
+            if (nearestBarIndex >= ref.read(barDataListProvider).length)
+              nearestBarIndex = ref.read(barDataListProvider).length - 1;
             if (ref.read(pointIndexProvider).state != nearestBarIndex) {
               ref.read(pointIndexProvider).state = nearestBarIndex;
             }
-          } else if(notification is ScrollEndNotification){
+          }
+        } else if(notification is ScrollEndNotification){
             if (!scrollLock) {
               scrollLock = true;
               int nearestBarIndex = _nearestBar(notification.metrics.extentBefore);
               if(nearestBarIndex >= ref.read(barDataListProvider).length)
                 nearestBarIndex = ref.read(barDataListProvider).length -1;
               ref.read(pointIndexProvider).state = nearestBarIndex;
-              ref.watch(scrollProvider).jumpTo(nearestBarIndex * 60);
+              ref.watch(scrollProvider).animateTo(nearestBarIndex * chartData.barSpace, duration: Duration(milliseconds: 300),curve : Curves.fastOutSlowIn);
               scrollLock = false;
             }
             isScrolling = false;
@@ -183,7 +185,7 @@ class DrawGraph extends ConsumerWidget {
     );
   }
   int _nearestBar(double now) {
-    double index = now / 60;
+    double index = now / chartData.barSpace;
     int left = index.round();
     return left;
   }
@@ -231,11 +233,14 @@ class BarItem extends ConsumerWidget {
     double minBarHeight = ref.read(barDataListProvider).reduce((a, b) => a.value<b.value ? a : b).value;
 
     return GestureDetector(
+      onTapDown: (down){
+        touchLock = true;
+      },
       onTapUp: (_) {
         if (!isScrolling) {
-          ref.watch(scrollProvider)
-              .animateTo(barData.index * 60, duration: Duration(milliseconds: 300),curve : Curves.fastOutSlowIn);
+          ref.watch(scrollProvider).animateTo(barData.index * chartData.barSpace, duration: Duration(milliseconds: 300),curve : Curves.fastOutSlowIn);
           ref.read(pointIndexProvider).state = barData.index;
+          Future.delayed(Duration(milliseconds: 300),()=> touchLock = false);
         }
       },
       child: Column(
@@ -268,7 +273,7 @@ class DrawBar extends ConsumerWidget{
           maxBarHeight,
           minBarHeight,
           isPointed),
-      size: Size(60, 200),
+      size: Size(chartData.barSpace, 200),
     );
   }
 }
@@ -293,7 +298,7 @@ class BarPainter extends CustomPainter{
     if(barData.value != min)
       ratio = (barData.value-min)/(max-min);
 
-    canvas.drawLine(Offset(30,size.height), Offset(30,(size.height-ratio*180)), paint);
+    canvas.drawLine(Offset(chartData.barSpace/2,size.height), Offset(chartData.barSpace/2,(size.height-ratio*180)), paint);
   }
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
