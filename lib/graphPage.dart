@@ -1,68 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:samsung_health_graph_clone/model/graph_model.dart';
-
-// class GraphScreen extends ConsumerStatefulWidget {
-//   final List<List<GraphData>> data;
-//   const GraphScreen({Key? key, required this.data}) : super(key: key);
-//
-//   @override
-//   _GraphScreenState createState() => _GraphScreenState();
-// }
-//
-// class _GraphScreenState extends ConsumerState<GraphScreen> {
-//   @override
-//   void initState() {
-//     ref.read(pointIndexProvider).state = widget.data.length -1;
-//     super.initState();
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     int isMonthlyToInt = ref
-//         .watch(isMonthly)
-//         .state ? 1 : 0;
-//
-//     List<BarData> barData = [];
-//     List.generate(widget.data[isMonthlyToInt].length, (index) =>
-//         barData.add(
-//             BarData(
-//                 value: (widget.data[isMonthlyToInt][index].total ~/
-//                     widget.data[isMonthlyToInt][index].count).toDouble(),
-//                 label: widget.data[isMonthlyToInt][index].date,
-//                 index: index)));
-//     ScrollController scrollController = ScrollController(
-//         initialScrollOffset: (barData.length - 1) * 60);
-//
-//     return Scaffold(
-//       body: ProviderScope(
-//         key: UniqueKey(),
-//         overrides: [
-//           scrollProvider.overrideWithValue(scrollController),
-//           barDataListProvider.overrideWithValue(barData),
-//           //pointIndexProvider.overrideWithValue(barData.length -1)
-//         ],
-//         child: SingleChildScrollView(
-//           child: Column(
-//             mainAxisAlignment: MainAxisAlignment.center,
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               GraphHeader(),
-//               DrawGraph(),
-//               Center(child: Text('---')),
-//               Content(data: barData),
-//               Container(color: Colors.pink[50], height: 300,),
-//               Container(color: Colors.blue[50], height: 300,),
-//               Container(color: Colors.pink[50], height: 300,),
-//             ],
-//           ),
-//
-//         ),
-//       ),
-//     );
-//   }
-// }
-
+import 'package:intl/intl.dart';
 
 class GraphPage extends ConsumerWidget {
   final List<List<GraphData>> data;
@@ -96,12 +35,11 @@ class GraphPage extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(height: 10),
               GraphHeader(),
               DrawGraph(),
-              Center(child: Text('---')),
+              SizedBox(height: 10,),
               Content(data: barData),
-              Container(color: Colors.pink[50],height: 300,),
-              Container(color: Colors.blue[50],height: 300,),
               Container(color: Colors.pink[50],height: 300,),
             ],
           ),
@@ -131,7 +69,7 @@ class GraphHeader extends ConsumerWidget {
               ),
               child:Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text("주별",style: TextStyle(fontSize: 20,color: Colors.white)),
+                child: Text("weekly",style: TextStyle(fontSize: 15,color: Colors.white)),
               ),
             ),
             Container(
@@ -141,7 +79,7 @@ class GraphHeader extends ConsumerWidget {
               ),
               child:Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text("월별",style: TextStyle(fontSize: 20,color: Colors.white)),
+                child: Text("monthly",style: TextStyle(fontSize: 15,color: Colors.white)),
               ),
             ),
           ],
@@ -156,10 +94,10 @@ class DrawGraph extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return NotificationListener(
       onNotification: (notification){
-          if (notification is ScrollStartNotification) {
-            isScrolling = true;
-          } else if(notification is ScrollUpdateNotification){
-            if(!touchLock) {
+        if (notification is ScrollStartNotification) {
+          isScrolling = true;
+        } else if(notification is ScrollUpdateNotification){
+          if(!touchLock) {
             int nearestBarIndex = _nearestBar(notification.metrics.extentBefore);
             if (nearestBarIndex >= ref.read(barDataListProvider).length)
               nearestBarIndex = ref.read(barDataListProvider).length - 1;
@@ -168,17 +106,17 @@ class DrawGraph extends ConsumerWidget {
             }
           }
         } else if(notification is ScrollEndNotification){
-            if (!scrollLock) {
-              scrollLock = true;
-              int nearestBarIndex = _nearestBar(notification.metrics.extentBefore);
-              if(nearestBarIndex >= ref.read(barDataListProvider).length)
-                nearestBarIndex = ref.read(barDataListProvider).length -1;
-              ref.read(pointIndexProvider).state = nearestBarIndex;
-              ref.watch(scrollProvider).animateTo(nearestBarIndex * chartData.barSpace, duration: Duration(milliseconds: 300),curve : Curves.fastOutSlowIn);
-              scrollLock = false;
-            }
-            isScrolling = false;
+          if (!scrollLock) {
+            scrollLock = true;
+            int nearestBarIndex = _nearestBar(notification.metrics.extentBefore);
+            if(nearestBarIndex >= ref.read(barDataListProvider).length)
+              nearestBarIndex = ref.read(barDataListProvider).length -1;
+            ref.read(pointIndexProvider).state = nearestBarIndex;
+            ref.watch(scrollProvider).animateTo(nearestBarIndex * chartData.barSpace, duration: Duration(milliseconds: 300),curve : Curves.fastOutSlowIn);
+            scrollLock = false;
           }
+          isScrolling = false;
+        }
         return true;
       },
       child: DrawBars(),
@@ -331,9 +269,46 @@ class Content extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     var index = ref.watch(pointIndexProvider);
-    return Container(
-      height: 300,
-      color: index.state % 2 == 1? Colors.blue[200] : Colors.red[200],
+    bool isMonth = ref.watch(isMonthly.notifier).state;
+
+    String dateText = data[index.state].label.toString();
+    if(!isMonth) {
+      DateTime dateTime = DateFormat("MM/dd").parse(dateText);
+      dateTime = dateTime.add(Duration(days: 6));
+      dateText = dateText + "~" + dateTime.month.toString()+"/"+dateTime.day.toString();
+    } else
+      dateText = dateText + "월";
+
+    return Center(
+      child: Column(
+        children: [
+          Text(dateText,style: TextStyle(fontSize: 30, color: Colors.indigo[800]),),
+          SizedBox(height: 10,),
+          CircleAvatar(
+            radius: 100.0,
+            backgroundColor: Colors.blueGrey,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('평균 시간',style: TextStyle(fontSize: 30)),
+                  Text('${data[index.state].value.toInt().toString()}',style: TextStyle(fontSize: 30)),
+                ],
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(index.state-1 >0 ? "${data[index.state-1].value.toInt().toString()}분\n걷기" : "0분\n걷기",style: TextStyle(fontSize: 15)),
+              Icon(Icons.directions_walk,size: 50,),
+              SizedBox(width: 50),
+              Icon(Icons.directions_run_outlined,size: 50,),
+              Text("${data[index.state].value.toInt().toString()}분\n뛰기",style: TextStyle(fontSize: 15)),
+            ],
+          )
+        ],
+      ),
     );
   }
 }
